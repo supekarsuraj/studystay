@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   provider: ^6.1.1   # ← Fixed indentation
+  http: ^1.2.2   # ← Add this line
+
 
 dev_dependencies:
   flutter_test:
