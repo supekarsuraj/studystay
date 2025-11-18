@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'UpdateDetailsScreen.dart';
+
 class SignupView extends StatefulWidget {
   const SignupView({super.key});
 
@@ -38,10 +40,16 @@ class _SignupViewState extends State<SignupView> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("✅ Signup successful: ${response.body}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Signup successful!")),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UpdateDetailsScreen(
+              phone: phone,  // pass phone number
+              selectedType: selectedType,  // pass selected type
+            ),
+          ),
         );
+
       } else {
         print("❌ Signup failed: ${response.statusCode} - ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
