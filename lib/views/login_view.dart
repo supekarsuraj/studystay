@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/UserModel.dart';
 import 'home_view.dart';
-import 'signup_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,24 +15,50 @@ class _LoginViewState extends State<LoginView> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
+  bool isLoading = false;
+
   Future<void> login() async {
-    final phone = phoneController.text;
-    final password = passwordController.text;
+    setState(() => isLoading = true);
 
-    final response = await http.post(
-      Uri.parse('http://10.226.84.50:8080/user/login?phone=$phone&password=$password'),
-    );
+    final phone = phoneController.text.trim();
+    final password = passwordController.text.trim();
 
-    if (response.statusCode == 200 && response.body.contains("successful")) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeView()),
-      );
-    } else {
+    final url =
+        "http://10.226.84.50:8080/user/login?phone=$phone&password=$password";
+
+    try {
+      final response = await http.post(Uri.parse(url));
+
+      print("STATUS => ${response.statusCode}");
+      print("BODY   => ${response.body}");
+
+      if (response.statusCode == 200) {
+        final jsonBody = jsonDecode(response.body);
+
+        UserModel user = UserModel.fromJson(jsonBody);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login Successful")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => HomeView(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login Failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: ${response.body}")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
+
+    setState(() => isLoading = false);
   }
 
   @override
@@ -49,8 +75,8 @@ class _LoginViewState extends State<LoginView> {
         child: Center(
           child: Card(
             elevation: 10,
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
             margin: const EdgeInsets.symmetric(horizontal: 24),
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -65,6 +91,7 @@ class _LoginViewState extends State<LoginView> {
                         color: Colors.deepPurple),
                   ),
                   const SizedBox(height: 20),
+
                   TextField(
                     controller: phoneController,
                     decoration: const InputDecoration(
@@ -72,6 +99,7 @@ class _LoginViewState extends State<LoginView> {
                       prefixIcon: Icon(Icons.phone),
                     ),
                   ),
+
                   TextField(
                     controller: passwordController,
                     obscureText: true,
@@ -80,8 +108,12 @@ class _LoginViewState extends State<LoginView> {
                       prefixIcon: Icon(Icons.lock),
                     ),
                   ),
+
                   const SizedBox(height: 24),
-                  ElevatedButton(
+
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
                     onPressed: login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -93,20 +125,12 @@ class _LoginViewState extends State<LoginView> {
                     ),
                     child: const Text(
                       "LOGIN",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      style:
+                      TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
+
                   const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignupView()),
-                    ),
-                    child: const Text(
-                      "Don’t have an account? Sign up",
-                      style: TextStyle(color: Colors.deepPurple),
-                    ),
-                  ),
                 ],
               ),
             ),

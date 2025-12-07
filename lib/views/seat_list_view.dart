@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:studystay/models/ReadingRoom.dart';
 import '../models/seat_model.dart';
 
 class SeatListScreen extends StatelessWidget {
-  const SeatListScreen({super.key});
+  const SeatListScreen({super.key, required ReadingRoom room});
 
   // -----------------------------------------------------------------
   // Dummy data – replace with real data / API later

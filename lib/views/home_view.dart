@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:studystay/views/seat_list_view.dart';
 import '../controllers/home_controller.dart';
+import '../models/ReadingRoom.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -23,17 +24,24 @@ class _HomeScreen extends StatelessWidget {
     final controller = Provider.of<HomeController>(context);
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         leading: const Icon(Icons.menu),
-        title: const Text('READING CENTER'),
+        title: const Text(
+          'READING CENTER',
+          style: TextStyle(letterSpacing: 1.2),
+        ),
         centerTitle: true,
+        elevation: 2,
+        backgroundColor: Colors.deepPurple,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ---------- AUTO-SCROLL BANNER ----------
+            const SizedBox(height: 10),
+
             SizedBox(
-              height: 200,
+              height: 210,
               child: PageView.builder(
                 controller: controller.pageController,
                 onPageChanged: controller.onPageChanged,
@@ -44,8 +52,9 @@ class _HomeScreen extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 8),
-            // Dots indicator
+
+            const SizedBox(height: 10),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -53,8 +62,8 @@ class _HomeScreen extends StatelessWidget {
                     (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: controller.currentPage == i ? 12 : 8,
-                  height: 8,
+                  width: controller.currentPage == i ? 12 : 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     color: controller.currentPage == i
                         ? Colors.deepPurple
@@ -64,27 +73,39 @@ class _HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
 
-            // ---------- MENU CARDS ----------
+            const SizedBox(height: 25),
+
             _MenuCard(
               icon: Icons.business,
               title: 'Hostel',
               onTap: () => _showSnack(context, 'Hostel tapped'),
             ),
-          _MenuCard(
-            icon: Icons.menu_book,
-            title: 'Reading Room',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SeatListScreen()),
+
+            _MenuCard(
+              icon: Icons.menu_book,
+              title: 'Reading Room',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SeatListScreen(
+                    room: ReadingRoom(
+                      name: "COMMON RC",
+                      totalSeats: 88,
+                      price: 0,
+                      monthlyPrice: 2000,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+
             _MenuCard(
               icon: Icons.restaurant,
               title: 'Mess',
               onTap: () => _showSnack(context, 'Mess tapped'),
             ),
-            const SizedBox(height: 30),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -92,44 +113,39 @@ class _HomeScreen extends StatelessWidget {
   }
 
   void _showSnack(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
   }
 }
 
-// ------------------------------------------------------------
-// Banner card
 class _BannerCard extends StatelessWidget {
   final dynamic banner;
   const _BannerCard({required this.banner});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.deepPurple, Colors.purpleAccent],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   banner.title,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -137,7 +153,10 @@ class _BannerCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   banner.subtitle,
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
                 ),
                 const Spacer(),
                 const Align(
@@ -154,7 +173,7 @@ class _BannerCard extends StatelessWidget {
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -174,14 +193,21 @@ class _MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFFE3F2FD),
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      color: Colors.white,
       child: ListTile(
-        leading: Icon(icon, color: Colors.deepPurple, size: 32),
+        contentPadding:
+        const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        leading: Icon(icon, color: Colors.deepPurple, size: 34),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
           textAlign: TextAlign.center,
         ),
         onTap: onTap,
