@@ -68,10 +68,10 @@ class _UpdateDetailsScreenState extends State<UpdateDetailsScreen> {
       //
       // );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeView()),
-      );
+      // Navigator.pushReplacement(// some time
+      //   context,
+      //   MaterialPageRoute(builder: (_) => const HomeView()),
+      // );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.body)),
