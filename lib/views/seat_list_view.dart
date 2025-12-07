@@ -1,49 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:studystay/models/ReadingRoom.dart';
 import '../models/seat_model.dart';
+import '../models/UserModel.dart';
 
 class SeatListScreen extends StatelessWidget {
-  const SeatListScreen({super.key, required ReadingRoom room});
+  final ReadingRoom room;
+  final UserModel user;
 
-  // -----------------------------------------------------------------
-  // Dummy data – replace with real data / API later
-  // -----------------------------------------------------------------
-  static const List<Seat> _seats = [
-    Seat(id: 1, number: 'SEAT1'),
-    Seat(id: 2, number: 'SEAT2'),
-    Seat(id: 3, number: 'SEAT3'),
-    Seat(id: 4, number: 'SEAT4'),
-    Seat(id: 5, number: 'SEAT5'),
-    Seat(id: 6, number: 'SEAT6'),
-  ];
+  const SeatListScreen({
+    super.key,
+    required this.room,
+    required this.user,
+  });
+
+  // Generate seats dynamically based on user's totalSeats
+  List<Seat> _generateSeats() {
+    final int totalSeats = user.totalSeats ?? 0;
+    return List.generate(
+      totalSeats,
+          (index) => Seat(
+        id: index + 1,
+        number: 'SEAT${index + 1}',
+        isBooked: false, // You can set this based on real data later
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final seats = _generateSeats();
+
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
         title: const Text('Seat List'),
         centerTitle: true,
+        backgroundColor: Colors.deepPurple,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // ------------------- ROOM HEADER CARD -------------------
-          _RoomHeaderCard(),
+          _RoomHeaderCard(user: user),
           const SizedBox(height: 24),
 
           // ------------------- SEAT GRID -------------------
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _seats.length,
+            itemCount: seats.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
               childAspectRatio: 1,
             ),
-            itemBuilder: (_, i) => _SeatTile(seat: _seats[i]),
+            itemBuilder: (_, i) => _SeatTile(seat: seats[i]),
           ),
           const SizedBox(height: 30),
         ],
@@ -56,6 +68,10 @@ class SeatListScreen extends StatelessWidget {
 // Room header (price, type, capacity, facilities)
 // ------------------------------------------------------------
 class _RoomHeaderCard extends StatelessWidget {
+  final UserModel user;
+
+  const _RoomHeaderCard({required this.user});
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -71,44 +87,79 @@ class _RoomHeaderCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: Colors.blue.shade50,
-                  child: const Icon(Icons.sensor_door, color: Colors.blue),
+                  child: const Icon(Icons.menu_book, color: Colors.blue),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'RC 3 ROOM 1',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    user.readingRoomName.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const Icon(Icons.keyboard_arrow_down),
               ],
             ),
             const SizedBox(height: 12),
+
+            // Price chips
             Row(
               children: [
-                _PriceChip(label: '₹0', color: Colors.blue),
+                _PriceChip(
+                  label: '₹${user.reservedSeatFee?.toStringAsFixed(0) ?? "0"}',
+                  labelText: 'Reserved',
+                  color: Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                _PriceChip(label: '₹0', color: Colors.grey.shade400),
+                _PriceChip(
+                  label: '₹${user.unreservedSeatFee?.toStringAsFixed(0) ?? "0"}',
+                  labelText: 'Unreserved',
+                  color: Colors.orange,
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Type', style: TextStyle(color: Colors.grey)),
-            const Text('Capacity', style: TextStyle(color: Colors.grey)),
-            const Text('Facilities', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 12),
+
+            // Room Details
+            _InfoRow(
+              label: 'Location',
+              value: user.location ?? 'N/A',
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              label: 'Total Capacity',
+              value: '${user.totalSeats ?? 0} seats',
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              label: 'Reserved Seats',
+              value: '${user.reservedSeatsCount ?? 0} seats',
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              label: 'Unreserved Seats',
+              value: '${user.unreservedSeatsCount ?? 0} seats',
+            ),
+            const SizedBox(height: 16),
+
+            // Detailed view button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Room detailed view – coming soon!')),
+                    const SnackBar(
+                      content: Text('Room detailed view – coming soon!'),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.arrow_forward),
                 label: const Text('Room detailed view'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.black87,
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -122,23 +173,75 @@ class _RoomHeaderCard extends StatelessWidget {
   }
 }
 
-// Small price chip
+// Info row widget
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Price chip with label
 class _PriceChip extends StatelessWidget {
   final String label;
+  final String labelText;
   final Color color;
-  const _PriceChip({required this.label, required this.color});
+
+  const _PriceChip({
+    required this.label,
+    required this.labelText,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          Text(
+            labelText,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -154,7 +257,9 @@ class _SeatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFFB9F6CA), // light‑green like the screenshot
+      color: seat.isBooked
+          ? Colors.red.shade100
+          : const Color(0xFFB9F6CA), // light-green for available
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
       child: InkWell(
@@ -167,7 +272,11 @@ class _SeatTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_seat, size: 36, color: Colors.black54),
+            Icon(
+              Icons.event_seat,
+              size: 36,
+              color: seat.isBooked ? Colors.red.shade700 : Colors.black54,
+            ),
             const SizedBox(height: 8),
             Text(
               seat.number,

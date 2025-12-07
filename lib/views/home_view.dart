@@ -3,21 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:studystay/views/seat_list_view.dart';
 import '../controllers/home_controller.dart';
 import '../models/ReadingRoom.dart';
+import '../models/UserModel.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+  final UserModel user;
+  const HomeView({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => HomeController(),
-      child: const _HomeScreen(),
+      child: _HomeScreen(user: user),
     );
   }
 }
 
 class _HomeScreen extends StatelessWidget {
-  const _HomeScreen();
+  final UserModel user;
+  const _HomeScreen({required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -89,11 +92,12 @@ class _HomeScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => SeatListScreen(
                     room: ReadingRoom(
-                      name: "COMMON RC",
-                      totalSeats: 88,
-                      price: 0,
-                      monthlyPrice: 2000,
+                      name: user.readingRoomName,
+                      totalSeats: user.totalSeats ?? 0,
+                      price: user.unreservedSeatFee ?? 0,
+                      monthlyPrice: user.reservedSeatFee ?? 0,
                     ),
+                    user: user, // Pass the user object
                   ),
                 ),
               ),

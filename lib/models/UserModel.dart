@@ -8,8 +8,8 @@ class UserModel {
   final int? totalSeats;
   final int? reservedSeatsCount;
   final int? unreservedSeatsCount;
-  final double? reservedSeatFee;
-  final double? unreservedSeatFee;
+  final int? reservedSeatFee;
+  final int? unreservedSeatFee;
   final String? location;
 
   UserModel({
@@ -38,8 +38,8 @@ class UserModel {
       totalSeats: json["totalSeats"],
       reservedSeatsCount: json["reservedSeatsCount"],
       unreservedSeatsCount: json["unreservedSeatsCount"],
-      reservedSeatFee: (json["reservedSeatFee"] as num?)?.toDouble(),
-      unreservedSeatFee: (json["unreservedSeatFee"] as num?)?.toDouble(),
+      reservedSeatFee: (json["reservedSeatFee"] as num?)?.toInt(),
+      unreservedSeatFee: (json["unreservedSeatFee"] as num?)?.toInt(),
       location: json["location"],
     );
   }
