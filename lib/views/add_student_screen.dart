@@ -20,7 +20,6 @@ class AddStudentScreen extends StatefulWidget {
 
 class _AddStudentScreenState extends State<AddStudentScreen>
     with SingleTickerProviderStateMixin {
-
   final _formKey = GlobalKey<FormState>();
 
   final nameCtrl = TextEditingController();
@@ -113,8 +112,6 @@ class _AddStudentScreenState extends State<AddStudentScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-
-                  // SEAT NO CARD
                   Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: Padding(
@@ -131,18 +128,13 @@ class _AddStudentScreenState extends State<AddStudentScreen>
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   TextFormField(
                     controller: nameCtrl,
                     decoration: _input("Student Name", Icons.person),
                     validator: (v) => v!.isEmpty ? "Enter name" : null,
                   ),
-
                   const SizedBox(height: 12),
-
-                  // PHONE (+91)
                   TextFormField(
                     controller: phoneCtrl,
                     keyboardType: TextInputType.phone,
@@ -155,9 +147,7 @@ class _AddStudentScreenState extends State<AddStudentScreen>
                     validator: (v) =>
                     v!.length != 10 ? "Enter 10 digit number" : null,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
@@ -165,43 +155,30 @@ class _AddStudentScreenState extends State<AddStudentScreen>
                     validator: (v) =>
                     !isValidEmail(v!) ? "Invalid email" : null,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: educationCtrl,
                     decoration: _input("Education", Icons.school),
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: payMoneyCtrl,
                     keyboardType: TextInputType.number,
                     decoration: _input("Pay Money", Icons.currency_rupee),
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: totalFeesCtrl,
                     keyboardType: TextInputType.number,
                     decoration: _input("Total Fees", Icons.account_balance_wallet),
                   ),
-
                   const SizedBox(height: 14),
-
                   _dateButton("Birth Date", birthDate, () => pickDate(true)),
                   _dateButton("Pay Date", payDate, () => pickDate(false)),
-
                   const SizedBox(height: 14),
-
                   _imagePicker("Student Photo", studentPhoto != null, () => pickImage(true)),
                   _imagePicker("Document Photo", documentPhoto != null, () => pickImage(false)),
-
                   const SizedBox(height: 25),
-
-                  // SAVE BUTTON
                   Container(
                     width: double.infinity,
                     height: 50,
@@ -217,7 +194,16 @@ class _AddStudentScreenState extends State<AddStudentScreen>
                         shadowColor: Colors.transparent,
                       ),
                       onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
+                        if (!_formKey.currentState!.validate()) return;
+
+                        // Show loading
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => const Center(child: CircularProgressIndicator()),
+                        );
+
+                        try {
                           await api.addStudent(
                             libraryId: widget.libraryId,
                             seatNo: widget.seatNo,
@@ -232,9 +218,29 @@ class _AddStudentScreenState extends State<AddStudentScreen>
                             studentPhoto: studentPhoto,
                             documentPhoto: documentPhoto,
                           );
-                          Navigator.pop(context);
+
+                          // Close loading dialog first
+                          if (mounted) Navigator.pop(context);
+
+                          // Then go back to SeatListScreen with success result
+                          if (mounted) Navigator.pop(context, true);
+
+                        } catch (e) {
+                          // Close loading dialog
+                          if (mounted) Navigator.pop(context);
+
+                          // Show error message
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Error: ${e.toString()}"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
                       },
+
                       child: const Text("SAVE STUDENT",
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),

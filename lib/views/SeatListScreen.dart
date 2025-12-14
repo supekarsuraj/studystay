@@ -1,39 +1,55 @@
 import 'package:flutter/material.dart';
 import '../models/UserModel.dart';
 import '../models/seat_model.dart';
+import 'add_student_screen.dart';
 
-class SeatListScreen extends StatelessWidget {
+class SeatListScreen extends StatefulWidget {
   final UserModel user;
 
   const SeatListScreen({super.key, required this.user});
 
   @override
-  Widget build(BuildContext context) {
+  State<SeatListScreen> createState() => _SeatListScreenState();
+}
 
-    int totalSeats = user.totalSeats ?? 0;
+class _SeatListScreenState extends State<SeatListScreen> {
+  late UserModel user;
 
-    // Generate dynamic seat list
-    List<Seat> seats = List.generate(
+  @override
+  void initState() {
+    super.initState();
+    user = widget.user;
+  }
+
+  // Generate seat list
+  List<Seat> _getSeats() {
+    final totalSeats = user.totalSeats ?? 0;
+    return List.generate(
       totalSeats,
           (i) => Seat(id: i + 1, number: 'SEAT ${i + 1}'),
     );
+  }
+
+  // Refresh UI after adding student
+  void _refreshSeatData() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final seats = _getSeats();
 
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
-        title: Text("${user.readingRoomName}"),
+        title: Text(user.readingRoomName),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-
-          // ROOM HEADER DETAILS
           _RoomHeaderCard(user: user),
-
           const SizedBox(height: 24),
 
-          // GRID BASED ON TOTAL SEATS
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -42,17 +58,35 @@ class SeatListScreen extends StatelessWidget {
               crossAxisCount: 3,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              childAspectRatio: 1,
             ),
-            itemBuilder: (_, i) => _SeatTile(seat: seats[i]),
-          ),
+            itemBuilder: (_, i) {
+              return _SeatTile(
+                seat: seats[i],
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddStudentScreen(
+                        libraryId: user.id,
+                        seatNo: seats[i].number,
+                      ),
+                    ),
+                  );
 
-          const SizedBox(height: 30),
+                  // ✅ refresh after student added
+                  if (result == true) {
+                    _refreshSeatData();
+                  }
+                },
+              );
+            },
+          ),
         ],
       ),
     );
   }
 }
+
 
 class _RoomHeaderCard extends StatelessWidget {
   final UserModel user;
@@ -63,75 +97,27 @@ class _RoomHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // TOP TITLE ROW
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.blue.shade50,
-                  child: const Icon(Icons.sensor_door, color: Colors.blue),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    user.readingRoomName,
-                    style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const Icon(Icons.keyboard_arrow_down),
-              ],
+            Text(
+              user.readingRoomName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 12),
-
-            // PRICE CHIPS
-            Row(
-              children: [
-                _PriceChip(
-                    label: 'Reserved ₹${user.reservedSeatFee ?? 0}',
-                    color: Colors.deepPurple),
-                const SizedBox(width: 8),
-                _PriceChip(
-                    label: 'Unreserved ₹${user.unreservedSeatFee ?? 0}',
-                    color: Colors.grey),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Text("Total Seats: ${user.totalSeats}", style: const TextStyle(fontSize: 16)),
-            Text("Reserved: ${user.reservedSeatsCount}", style: const TextStyle(fontSize: 16)),
-            Text("Unreserved: ${user.unreservedSeatsCount}", style: const TextStyle(fontSize: 16)),
-            Text("Location: ${user.location}", style: const TextStyle(fontSize: 16)),
-
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('Room detailed view'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.black87,
-                ),
-              ),
-            ),
+            Text("Total Seats: ${user.totalSeats ?? 0}"),
+            Text("Reserved: ${user.reservedSeatsCount ?? 0}"),
+            Text("Unreserved: ${user.unreservedSeatsCount ?? 0}"),
+            Text("Location: ${user.location ?? ''}"),
           ],
         ),
       ),
     );
   }
 }
+
 
 class _PriceChip extends StatelessWidget {
   final String label;
@@ -149,8 +135,7 @@ class _PriceChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style:
-        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -158,8 +143,9 @@ class _PriceChip extends StatelessWidget {
 
 class _SeatTile extends StatelessWidget {
   final Seat seat;
+  final VoidCallback onTap;
 
-  const _SeatTile({required this.seat});
+  const _SeatTile({required this.seat, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -169,19 +155,15 @@ class _SeatTile extends StatelessWidget {
       elevation: 3,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${seat.number} tapped')),
-          );
-        },
+        onTap: onTap,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_seat, size: 36, color: Colors.black54),
+            const Icon(Icons.event_seat, size: 36),
             const SizedBox(height: 8),
             Text(
               seat.number,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -189,3 +171,4 @@ class _SeatTile extends StatelessWidget {
     );
   }
 }
+
