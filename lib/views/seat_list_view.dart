@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:studystay/models/ReadingRoom.dart';
 import '../models/seat_model.dart';
 import '../models/UserModel.dart';
+import 'add_student_screen.dart';
 
 class SeatListScreen extends StatelessWidget {
   final ReadingRoom room;
@@ -55,7 +56,7 @@ class SeatListScreen extends StatelessWidget {
               crossAxisSpacing: 16,
               childAspectRatio: 1,
             ),
-            itemBuilder: (_, i) => _SeatTile(seat: seats[i]),
+            itemBuilder: (_, i) => _SeatTile(seat: seats[i], libraryId: user.id,),
           ),
           const SizedBox(height: 30),
         ],
@@ -252,31 +253,38 @@ class _PriceChip extends StatelessWidget {
 // ------------------------------------------------------------
 class _SeatTile extends StatelessWidget {
   final Seat seat;
-  const _SeatTile({required this.seat});
+  final int libraryId;   // 👈 ADD THIS
+
+  const _SeatTile({
+    required this.seat,
+    required this.libraryId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: seat.isBooked
           ? Colors.red.shade100
-          : const Color(0xFFB9F6CA), // light-green for available
+          : const Color(0xFFB9F6CA),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${seat.number} tapped')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddStudentScreen(
+                libraryId: libraryId,   // ✅ NOW VALID
+                seatNo: seat.number,
+              ),
+            ),
           );
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.event_seat,
-              size: 36,
-              color: seat.isBooked ? Colors.red.shade700 : Colors.black54,
-            ),
+            const Icon(Icons.event_seat, size: 36),
             const SizedBox(height: 8),
             Text(
               seat.number,
